@@ -3,6 +3,8 @@ package soa.space_marines.servlets;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import soa.space_marines.dto.FilteringObjectDto;
 import soa.space_marines.dto.PageableSpaceMarinesDto;
+import soa.space_marines.exception.BadFilterException;
+import soa.space_marines.exception.BadSortException;
 import soa.space_marines.services.FilteringSpaceMarineService;
 import soa.space_marines.services.SpaceMarineService;
 import soa.space_marines.utils.Converter;
@@ -15,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/space/marine/all")
+@WebServlet("/space/marines")
 public class SpaceMarineAllServlet extends HttpServlet {
     private final SpaceMarineService spaceMarineService;
     private final FilteringSpaceMarineService filteringSpaceMarineService;
@@ -30,33 +32,50 @@ public class SpaceMarineAllServlet extends HttpServlet {
 
         String atPage = req.getParameter("at_page");
         String pageNumber = req.getParameter("page_number");
+        FilteringObjectDto filteringObjectDto;
 
-        FilteringObjectDto filteringObjectDto = filteringSpaceMarineService.prepareFilteringObjectDto(req.getParameterMap());
+        try {
+            filteringObjectDto = filteringSpaceMarineService.prepareFilteringObjectDto(req.getParameterMap());
+        } catch (BadFilterException ex){
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
 
         if ((atPage != null && !atPage.isEmpty()) && (pageNumber != null && !pageNumber.isEmpty())){
             Integer intAtPage = Converter.intConvert(atPage);
             Integer intPageNumber = Converter.intConvert(pageNumber);
 
-            if (intAtPage != null && intPageNumber != null){
-                resp.setContentType("application/xml");
-                PrintWriter writer = resp.getWriter();
-                String[] sortParams = req.getParameterValues("sort");
-                String sortState = req.getParameter("sort_state");
-                sortParams = sortParams == null ? new String[0] : sortParams;
+            if (intAtPage == null || intPageNumber == null){
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
 
+            if ((intAtPage <= 0 || intAtPage > 50) || intPageNumber <= 0){
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+
+            resp.setContentType("application/xml");
+            PrintWriter writer = resp.getWriter();
+            String[] sortParams = req.getParameterValues("sort");
+            String sortState = req.getParameter("sort_state");
+            sortParams = sortParams == null ? new String[0] : sortParams;
+
+            try {
                 PageableSpaceMarinesDto spaceMarines = this.spaceMarineService.findAllSpaceMarines(
                         intAtPage,
                         intPageNumber,
                         filteringObjectDto,
                         sortParams,
                         sortState);
+
                 XmlMapper xmlMapper = new XmlMapper();
 
                 writer.println(xmlMapper.writeValueAsString(spaceMarines));
                 writer.flush();
 
                 resp.setStatus(HttpServletResponse.SC_OK);
-            } else {
+            } catch (BadSortException ex){
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
         } else {

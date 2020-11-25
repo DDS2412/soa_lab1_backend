@@ -13,7 +13,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.List;
 
 @WebServlet("/space/marine/*")
 public class SpaceMarineServlet extends HttpServlet {
@@ -24,13 +23,14 @@ public class SpaceMarineServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         setAccessControlHeaders(resp);
 
-        String[] pathParams = req.getPathInfo().split("/");
-        if (pathParams.length != 2) return;
+        if (req.getPathInfo() != null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
 
-        if (!pathParams[1].equals("create")) return;
         BufferedReader reader = req.getReader();
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -45,15 +45,22 @@ public class SpaceMarineServlet extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_CREATED);
     }
 
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         setAccessControlHeaders(resp);
+
+        if (req.getPathInfo() == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
 
         String[] pathParams = req.getPathInfo().split("/");
         if (pathParams.length != 2) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        if (!pathParams[1].equals("update"))  {
+
+        Integer spaceMarineId = Converter.intConvert(pathParams[1]);
+        if (spaceMarineId == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
@@ -66,8 +73,12 @@ public class SpaceMarineServlet extends HttpServlet {
 
         XmlMapper xmlMapper = new XmlMapper();
         SpaceMarine newSpaceMarine = xmlMapper.readValue(stringBuilder.toString(), SpaceMarine.class);
-
-        this.spaceMarineService.updateSpaceMarine(newSpaceMarine);
+        try {
+            this.spaceMarineService.updateSpaceMarine(newSpaceMarine.setId(spaceMarineId));
+        } catch (Exception ex){
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
@@ -80,21 +91,21 @@ public class SpaceMarineServlet extends HttpServlet {
         }
 
         String[] pathParams = req.getPathInfo().split("/");
-        if(pathParams.length != 3) {
+        if(pathParams.length != 2) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
         Integer id = Converter.intConvert(pathParams[1]);
 
-        if (id == null && !pathParams[2].equals("delete")) {
+        if (id == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
         SpaceMarine spaceMarine = this.spaceMarineService.deleteSpaceMarineById(id);
         if (spaceMarine == null){
-            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 

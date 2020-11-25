@@ -4,6 +4,7 @@ import soa.space_marines.daos.SpaceMarineDAO;
 import soa.space_marines.dto.FilteringObjectDto;
 import soa.space_marines.dto.PageableSpaceMarinesDto;
 import soa.space_marines.enums.AstartesCategory;
+import soa.space_marines.exception.BadSortException;
 import soa.space_marines.models.SpaceMarine;
 
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class SpaceMarineService {
             Integer pageNumber,
             FilteringObjectDto filteringObjectDto,
             String[] sortParams,
-            String sortState){
+            String sortState) throws BadSortException {
         List<SpaceMarine> spaceMarines = this.spaceMarineDAO.findAll();
         spaceMarines = filteringSpaceMarineService.filterBy(spaceMarines, filteringObjectDto);
 

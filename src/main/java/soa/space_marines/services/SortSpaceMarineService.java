@@ -1,6 +1,7 @@
 package soa.space_marines.services;
 
 import soa.space_marines.comparators.*;
+import soa.space_marines.exception.BadSortException;
 import soa.space_marines.models.SpaceMarine;
 
 import java.util.Comparator;
@@ -8,10 +9,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class SortSpaceMarineService {
-    public List<SpaceMarine> sortByParams(List<SpaceMarine> spaceMarines, String[] sortParams, String sortState){
+    public List<SpaceMarine> sortByParams(List<SpaceMarine> spaceMarines, String[] sortParams, String sortState) throws BadSortException{
         sortState = sortState == null ? "asc" : sortState;
-
         for (String param : sortParams){
+            if (param.equals("")){
+                continue;
+            }
+
             spaceMarines = spaceMarines
                     .stream()
                     .sorted(getComparator(param, sortState))
@@ -21,7 +25,7 @@ public class SortSpaceMarineService {
         return spaceMarines;
     }
 
-    private Comparator<SpaceMarine> getComparator(String param, String sortState){
+    private Comparator<SpaceMarine> getComparator(String param, String sortState) throws BadSortException {
         Boolean sortStateBoolean = sortState.equals("asc");
 
         switch (param){
@@ -50,7 +54,7 @@ public class SortSpaceMarineService {
                 return new SpaceMarineYPositionComparator(sortStateBoolean);
             }
             default:{
-                return new SpaceMarineNameComparator(sortStateBoolean);
+                throw new BadSortException();
             }
         }
     }

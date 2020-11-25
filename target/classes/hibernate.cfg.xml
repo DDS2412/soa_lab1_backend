@@ -6,9 +6,12 @@
     <session-factory>
         <property name="hibernate.hbm2ddl.auto">create-drop</property>
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-        <property name="hibernate.connection.url">jdbc:postgresql://pg:5432/studs</property>
-        <property name="hibernate.connection.username">s242193</property>
-        <property name="hibernate.connection.password">qbg078</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://127.0.0.1:5432/postgres</property>
+        <property name="hibernate.connection.username">postgres</property>
+        <property name="hibernate.connection.password">postgres</property>
+        <!-- <property name="hibernate.connection.url">jdbc:postgresql://pg:5432/studs</property> -->
+        <!-- <property name="hibernate.connection.username">s242193</property> -->
+        <!-- <property name="hibernate.connection.password">RVDgeS3WfRLNdY20</property> -->
         <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQL9Dialect</property>
         <property name="show_sql">true</property>
     </session-factory>

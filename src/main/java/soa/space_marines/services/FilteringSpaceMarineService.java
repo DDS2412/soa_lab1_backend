@@ -3,6 +3,7 @@ package soa.space_marines.services;
 import soa.space_marines.dto.FilteringObjectDto;
 import soa.space_marines.enums.AstartesCategory;
 import soa.space_marines.enums.MeleeWeapon;
+import soa.space_marines.exception.BadFilterException;
 import soa.space_marines.models.SpaceMarine;
 import soa.space_marines.utils.Converter;
 
@@ -17,7 +18,7 @@ public class FilteringSpaceMarineService {
                 .collect(Collectors.toList());
     }
 
-    public FilteringObjectDto prepareFilteringObjectDto(Map<String, String[]> filterReq){
+    public FilteringObjectDto prepareFilteringObjectDto(Map<String, String[]> filterReq) throws BadFilterException {
         String[] filterParams = filterReq.get("filter");
         FilteringObjectDto filteringObjectDto = new FilteringObjectDto();
 
@@ -27,8 +28,9 @@ public class FilteringSpaceMarineService {
 
         for (String param : filterParams){
             String[] values = filterReq.get(param);
-            if (values == null) continue;
-            if (values.length != 1) continue;
+            if (values == null || values.length != 1) {
+                throw new BadFilterException();
+            }
 
             switch (param){
                 case "name": {
@@ -72,6 +74,9 @@ public class FilteringSpaceMarineService {
                 case "yPosition": {
                     filteringObjectDto.setYPosition(Converter.longConvert(values[0]));
                     break;
+                }
+                default:{
+                    throw new BadFilterException();
                 }
             }
         }
